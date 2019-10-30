@@ -1,17 +1,42 @@
 package com.metin.professionalartbook;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.HashMap;
+
 public class ArtContentProvider extends ContentProvider {
+
+    static final String PROVIDER_NAME = "com.metin.professionalartbook.ArtContentProvider";
+    static final String URL = "content://" + PROVIDER_NAME + "/arts";
+    static final Uri CONTENT_URI = Uri.parse(URL);
+
+    static final String NAME = "name";
+    static final String IMAGE = "image";
+
+    static final int ARTS = 1;
+    static final UriMatcher uriMatcher;
+
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI(PROVIDER_NAME, "arts", ARTS);
+    }
+
+    private static HashMap<String, String> ART_PROJECTION_MAP;
+
+    //-------------------- Database --------------------
 
     private SQLiteDatabase sqLiteDatabase;
     static final String DATABASE_NAME = "Arts";
@@ -48,10 +73,33 @@ public class ArtContentProvider extends ContentProvider {
         return (sqLiteDatabase != null);
     }
 
+
+    //-------------------- Database --------------------
+
+
     @Nullable
     @Override
-    public Cursor query(@NonNull Uri uri, @Nullable String[] strings, @Nullable String s, @Nullable String[] strings1, @Nullable String s1) {
-        return null;
+    public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
+
+        SQLiteQueryBuilder sqLiteQueryBuilder = new SQLiteQueryBuilder();
+        sqLiteQueryBuilder.setTables(ARTS_TABLE_NAME);
+
+        switch (uriMatcher.match(uri)){
+            case ARTS:
+                sqLiteQueryBuilder.setProjectionMap(ART_PROJECTION_MAP);
+            default:
+                //
+        }
+
+        if (sortOrder == null || sortOrder.matches("")){
+            sortOrder = NAME;
+        }
+
+        Cursor cursor = sqLiteQueryBuilder.query(sqLiteDatabase, projection, selection, selectionArgs, null, null, sortOrder);
+
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return cursor;
     }
 
     @Nullable
@@ -62,8 +110,16 @@ public class ArtContentProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public Uri insert(@NonNull Uri uri, @Nullable ContentValues contentValues) {
-        return null;
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
+
+        long rowID = sqLiteDatabase.insert(ARTS_TABLE_NAME, "", values);
+
+        if (rowID > 0){
+            Uri newUri = ContentUris.withAppendedId(CONTENT_URI, rowID);
+            getContext().getContentResolver().notifyChange(newUri, null);
+            return newUri;
+        }
+        throw new SQLException("Failed");
     }
 
     @Override

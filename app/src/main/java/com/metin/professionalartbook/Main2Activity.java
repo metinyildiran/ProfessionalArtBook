@@ -7,6 +7,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -18,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class Main2Activity extends AppCompatActivity {
@@ -25,6 +27,7 @@ public class Main2Activity extends AppCompatActivity {
     ImageView imageView;
     EditText editText;
     Button saveButton, deleteButton, updateButton;
+    Bitmap selectedImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,22 @@ public class Main2Activity extends AppCompatActivity {
     }
 
     public void saveRecord(View view) {
+
+        String artName = editText.getText().toString();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        selectedImage.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
+        byte[] bytes = outputStream.toByteArray();
+
+        ContentValues contentValues = new ContentValues();
+
+        contentValues.put(ArtContentProvider.NAME, artName);
+        contentValues.put(ArtContentProvider.IMAGE, bytes);
+
+        getContentResolver().insert(ArtContentProvider.CONTENT_URI, contentValues);
+
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(intent);
 
     }
 
@@ -85,7 +104,7 @@ public class Main2Activity extends AppCompatActivity {
             Uri image = data.getData();
 
             try {
-                Bitmap selectedImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), image);
+                selectedImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), image);
                 imageView.setImageBitmap(selectedImage);
             } catch (IOException e) {
                 e.printStackTrace();
