@@ -123,12 +123,39 @@ public class ArtContentProvider extends ContentProvider {
     }
 
     @Override
-    public int delete(@NonNull Uri uri, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+    public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
+
+        int rowCount = 0;
+
+        switch (uriMatcher.match(uri)){
+            case ARTS:
+                    //delete
+                rowCount = sqLiteDatabase.delete(ARTS_TABLE_NAME, selection, selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Failed URI");
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
+        return rowCount;
     }
 
     @Override
-    public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+    public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
+
+        int rowCount = 0;
+        switch (uriMatcher.match(uri)){
+            case ARTS:
+                //update
+                rowCount = sqLiteDatabase.update(ARTS_TABLE_NAME, values, selection, selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Failed URI");
+        }
+
+        getContext().getContentResolver().notifyChange(uri, null);
+
+        return rowCount;
     }
 }

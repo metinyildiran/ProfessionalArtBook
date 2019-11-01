@@ -7,10 +7,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -29,6 +32,8 @@ public class Main2Activity extends AppCompatActivity {
     Button saveButton, deleteButton, updateButton;
     Bitmap selectedImage;
 
+    String firstName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,8 +45,31 @@ public class Main2Activity extends AppCompatActivity {
         deleteButton = findViewById(R.id.deleteButton);
         updateButton = findViewById(R.id.updateButton);
 
-        deleteButton.setVisibility(View.INVISIBLE);
-        updateButton.setVisibility(View.INVISIBLE);
+        Intent intent = getIntent();
+        String info = intent.getStringExtra("info");
+
+        if (info.matches("new")){
+
+            Bitmap background = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.background);
+            imageView.setImageBitmap(background);
+            editText.setText("");
+            saveButton.setVisibility(View.VISIBLE);
+            deleteButton.setVisibility(View.INVISIBLE);
+            updateButton.setVisibility(View.INVISIBLE);
+
+        }else {
+            String name = intent.getStringExtra("name");
+            editText.setText(name);
+
+            firstName = name;
+
+            int position = intent.getIntExtra("position", 0);
+            imageView.setImageBitmap(MainActivity.artImageList.get(position));
+
+            saveButton.setVisibility(View.INVISIBLE);
+            deleteButton.setVisibility(View.VISIBLE);
+            updateButton.setVisibility(View.VISIBLE);
+        }
     }
 
     public void saveRecord(View view) {
@@ -66,9 +94,32 @@ public class Main2Activity extends AppCompatActivity {
 
     public void deleteRecord(View view) {
 
+        String recordName = editText.getText().toString();
+
+        getContentResolver().delete(ArtContentProvider.CONTENT_URI, "name=?", new String[] {recordName});
+
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(intent);
+
     }
 
     public void updateRecord(View view) {
+
+        String artName = editText.getText().toString();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 50, outputStream);
+        byte[] bytes = outputStream.toByteArray();
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(ArtContentProvider.NAME, artName);
+        contentValues.put(ArtContentProvider.IMAGE, bytes);
+
+        getContentResolver().update(ArtContentProvider.CONTENT_URI, contentValues, "name=?", new String[] {firstName});
+
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(intent);
 
     }
 

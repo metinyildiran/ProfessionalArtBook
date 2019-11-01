@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
 
     ListView listView;
+    static ArrayList<Bitmap> artImageList;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (item.getItemId() == R.id.add_art){
             Intent intent = new Intent(getApplicationContext(), Main2Activity.class);
+            intent.putExtra("info", "new");
             startActivity(intent);
         }
 
@@ -49,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.listView);
 
-        ArrayList<String> artNameList = new ArrayList<>();
-        ArrayList<Bitmap> artImageList = new ArrayList<>();
+        final ArrayList<String> artNameList = new ArrayList<>();
+        artImageList = new ArrayList<>();
 
         ArrayAdapter arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, artNameList);
         listView.setAdapter(arrayAdapter);
@@ -75,6 +79,17 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                Intent intent = new Intent(getApplicationContext(), Main2Activity.class);
+                intent.putExtra("info", "old");
+                intent.putExtra("name", artNameList.get(position));
+                intent.putExtra("position", position);
+                startActivity(intent);
+            }
+        });
 
     }
 }
